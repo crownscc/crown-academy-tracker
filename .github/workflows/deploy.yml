@@ -2,7 +2,7 @@ name: Deploy to Vercel
 
 on:
   push:
-    branches: [main]
+    branches: [claude/analyze-test-coverage-kffP9]
   workflow_dispatch:
 
 jobs:
