@@ -27,47 +27,66 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          REPORT=""
+          set +e
+          REPORT_FILE=$(mktemp)
 
           # Project info
-          REPORT+="## Vercel Project Config\n\`\`\`json\n$(cat .vercel/project.json)\n\`\`\`\n\n"
+          echo "## Vercel Project Config" >> "$REPORT_FILE"
+          echo '```json' >> "$REPORT_FILE"
+          cat .vercel/project.json >> "$REPORT_FILE"
+          echo '' >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
 
           # Get project ID
           PROJECT_ID=$(python3 -c "import json; print(json.load(open('.vercel/project.json'))['projectId'])")
-          REPORT+="**Project ID:** $PROJECT_ID\n\n"
+          echo "**Project ID:** \`$PROJECT_ID\`" >> "$REPORT_FILE"
+          echo "" >> "$REPORT_FILE"
 
           # List project domains
-          DOMAINS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v9/projects/$PROJECT_ID/domains")
-          REPORT+="## Current Project Domains\n\`\`\`json\n$DOMAINS\n\`\`\`\n\n"
+          echo "## Current Project Domains" >> "$REPORT_FILE"
+          echo '```json' >> "$REPORT_FILE"
+          curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$PROJECT_ID/domains" >> "$REPORT_FILE"
+          echo '' >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
 
           # Try adding domain
-          ADD=$(curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
+          echo "## Add Domain Result" >> "$REPORT_FILE"
+          echo '```json' >> "$REPORT_FILE"
+          curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"name":"new.crown.direct"}' \
-            "https://api.vercel.com/v9/projects/$PROJECT_ID/domains")
-          REPORT+="## Add Domain Result\n\`\`\`json\n$ADD\n\`\`\`\n\n"
+            "https://api.vercel.com/v9/projects/$PROJECT_ID/domains" >> "$REPORT_FILE"
+          echo '' >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
 
           # Check domain verification
-          VERIFY=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v9/projects/$PROJECT_ID/domains/new.crown.direct")
-          REPORT+="## Domain Verification\n\`\`\`json\n$VERIFY\n\`\`\`\n\n"
+          echo "## Domain Verification" >> "$REPORT_FILE"
+          echo '```json' >> "$REPORT_FILE"
+          curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$PROJECT_ID/domains/new.crown.direct" >> "$REPORT_FILE"
+          echo '' >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
 
           # List recent deployments
-          DEPLOYS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v6/deployments?projectId=$PROJECT_ID&limit=3")
-          REPORT+="## Recent Deployments\n\`\`\`json\n$DEPLOYS\n\`\`\`\n\n"
+          echo "## Recent Deployments (last 3)" >> "$REPORT_FILE"
+          echo '```json' >> "$REPORT_FILE"
+          curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$PROJECT_ID&limit=3" >> "$REPORT_FILE"
+          echo '' >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
 
           # DNS lookup
-          REPORT+="## DNS Lookup\n\`\`\`\n$(nslookup new.crown.direct 2>&1 || true)\n\`\`\`\n\n"
+          echo "## DNS Lookup" >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
+          nslookup new.crown.direct >> "$REPORT_FILE" 2>&1 || true
+          echo '```' >> "$REPORT_FILE"
 
-          # Curl test
-          REPORT+="## Curl Tests\n"
-          REPORT+="### Deploy URL from latest\n\`\`\`\n"
-          LATEST_URL=$(echo "$DEPLOYS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['deployments'][0]['url'] if d.get('deployments') else 'none')" 2>&1)
-          REPORT+="Latest URL: $LATEST_URL\n"
-          REPORT+="$(curl -sI "https://$LATEST_URL" 2>&1 | head -10)\n\`\`\`\n"
-          REPORT+="### new.crown.direct\n\`\`\`\n$(curl -sI https://new.crown.direct 2>&1 | head -10)\n\`\`\`\n"
+          # Curl tests
+          echo "## Curl: new.crown.direct" >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
+          curl -svI https://new.crown.direct >> "$REPORT_FILE" 2>&1 || true
+          echo '```' >> "$REPORT_FILE"
 
           # Post to issue
-          gh issue comment 9 --repo crownscc/crown-academy-tracker --body "$(echo -e "$REPORT")"
+          gh issue comment 9 --repo crownscc/crown-academy-tracker --body-file "$REPORT_FILE"
