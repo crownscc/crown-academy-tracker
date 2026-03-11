@@ -2,3 +2,7 @@ node_modules/
 dist/
 coverage/
 *.js.map
+.next/
+.env
+prisma/*.db
+prisma/*.db-journal

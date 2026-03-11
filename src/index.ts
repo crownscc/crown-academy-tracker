@@ -1,8 +1,11 @@
 // Models
-export {
+export type {
   Student,
   Enrollment,
   Grade,
+} from './models/student';
+
+export {
   createStudent,
   isValidEmail,
   deactivateStudent,
@@ -10,11 +13,14 @@ export {
   updateStudentEmail,
 } from './models/student';
 
-export {
+export type {
   Course,
   Lesson,
   CourseLevel,
   CourseCategory,
+} from './models/course';
+
+export {
   createCourse,
   closeCourse,
   openCourse,
@@ -24,10 +30,13 @@ export {
   createLesson,
 } from './models/course';
 
-export {
+export type {
   Achievement,
   StudentAchievement,
   AchievementTier,
+} from './models/achievement';
+
+export {
   createAchievement,
   getTierMultiplier,
   calculateAchievementScore,
@@ -40,8 +49,10 @@ export { GRADE_VALUES } from './constants';
 
 // Services
 export { EnrollmentService } from './services/enrollment.service';
-export { ProgressService, ProgressReport, LeaderboardEntry } from './services/progress.service';
-export { NotificationService, Notification, NotificationType } from './services/notification.service';
+export { ProgressService } from './services/progress.service';
+export type { ProgressReport, LeaderboardEntry } from './services/progress.service';
+export { NotificationService } from './services/notification.service';
+export type { Notification, NotificationType } from './services/notification.service';
 
 // Utils
 export {
