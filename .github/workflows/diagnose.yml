@@ -85,10 +85,37 @@ jobs:
           nslookup new.crown.direct >> "$REPORT_FILE" 2>&1 || true
           echo '```' >> "$REPORT_FILE"
 
-          # Curl tests
-          echo "## Curl: new.crown.direct" >> "$REPORT_FILE"
+          # Curl tests - homepage
+          echo "## Test 1: Homepage (new.crown.direct)" >> "$REPORT_FILE"
           echo '```' >> "$REPORT_FILE"
-          curl -svI https://new.crown.direct >> "$REPORT_FILE" 2>&1 || true
+          curl -sI https://new.crown.direct >> "$REPORT_FILE" 2>&1 || true
+          echo '```' >> "$REPORT_FILE"
+
+          # Curl tests - API students
+          echo "## Test 2: API /api/students" >> "$REPORT_FILE"
+          echo '```json' >> "$REPORT_FILE"
+          curl -s https://new.crown.direct/api/students >> "$REPORT_FILE" 2>&1 || true
+          echo '' >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
+
+          # Curl tests - API stats
+          echo "## Test 3: API /api/stats" >> "$REPORT_FILE"
+          echo '```json' >> "$REPORT_FILE"
+          curl -s https://new.crown.direct/api/stats >> "$REPORT_FILE" 2>&1 || true
+          echo '' >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
+
+          # Curl tests - API courses
+          echo "## Test 4: API /api/courses" >> "$REPORT_FILE"
+          echo '```json' >> "$REPORT_FILE"
+          curl -s https://new.crown.direct/api/courses >> "$REPORT_FILE" 2>&1 || true
+          echo '' >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
+
+          # Curl tests - vercel.app domain
+          echo "## Test 5: crown-academy-tracker.vercel.app" >> "$REPORT_FILE"
+          echo '```' >> "$REPORT_FILE"
+          curl -sI https://crown-academy-tracker.vercel.app >> "$REPORT_FILE" 2>&1 || true
           echo '```' >> "$REPORT_FILE"
 
           # Post to issue via GitHub API
