@@ -1,0 +1,73 @@
+name: Diagnose Deployment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Run diagnostics
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          REPORT=""
+
+          # Project info
+          REPORT+="## Vercel Project Config\n\`\`\`json\n$(cat .vercel/project.json)\n\`\`\`\n\n"
+
+          # Get project ID
+          PROJECT_ID=$(python3 -c "import json; print(json.load(open('.vercel/project.json'))['projectId'])")
+          REPORT+="**Project ID:** $PROJECT_ID\n\n"
+
+          # List project domains
+          DOMAINS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$PROJECT_ID/domains")
+          REPORT+="## Current Project Domains\n\`\`\`json\n$DOMAINS\n\`\`\`\n\n"
+
+          # Try adding domain
+          ADD=$(curl -s -X POST -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"new.crown.direct"}' \
+            "https://api.vercel.com/v9/projects/$PROJECT_ID/domains")
+          REPORT+="## Add Domain Result\n\`\`\`json\n$ADD\n\`\`\`\n\n"
+
+          # Check domain verification
+          VERIFY=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$PROJECT_ID/domains/new.crown.direct")
+          REPORT+="## Domain Verification\n\`\`\`json\n$VERIFY\n\`\`\`\n\n"
+
+          # List recent deployments
+          DEPLOYS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$PROJECT_ID&limit=3")
+          REPORT+="## Recent Deployments\n\`\`\`json\n$DEPLOYS\n\`\`\`\n\n"
+
+          # DNS lookup
+          REPORT+="## DNS Lookup\n\`\`\`\n$(nslookup new.crown.direct 2>&1 || true)\n\`\`\`\n\n"
+
+          # Curl test
+          REPORT+="## Curl Tests\n"
+          REPORT+="### Deploy URL from latest\n\`\`\`\n"
+          LATEST_URL=$(echo "$DEPLOYS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['deployments'][0]['url'] if d.get('deployments') else 'none')" 2>&1)
+          REPORT+="Latest URL: $LATEST_URL\n"
+          REPORT+="$(curl -sI "https://$LATEST_URL" 2>&1 | head -10)\n\`\`\`\n"
+          REPORT+="### new.crown.direct\n\`\`\`\n$(curl -sI https://new.crown.direct 2>&1 | head -10)\n\`\`\`\n"
+
+          # Post to issue
+          gh issue comment 9 --repo crownscc/crown-academy-tracker --body "$(echo -e "$REPORT")"
