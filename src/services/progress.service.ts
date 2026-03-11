@@ -7,6 +7,7 @@ import {
   updateProgress,
 } from '../models/achievement';
 import { Enrollment, Grade } from '../models/student';
+import { GRADE_VALUES } from '../constants';
 
 export interface ProgressReport {
   studentId: string;
@@ -35,7 +36,7 @@ export class ProgressService {
     this.achievements.set(achievement.id, achievement);
   }
 
-  awardProgress(studentId: string, achievementId: string, progress: number): StudentAchievement {
+  awardProgress(studentId: string, achievementId: string, progressIncrement: number): StudentAchievement {
     const achievement = this.achievements.get(achievementId);
     if (!achievement) {
       throw new Error('Achievement not found');
@@ -48,14 +49,13 @@ export class ProgressService {
       existing = {
         studentId,
         achievementId,
-        earnedAt: new Date(),
         progress: 0,
       };
       studentAchievements.push(existing);
       this.studentAchievements.set(studentId, studentAchievements);
     }
 
-    const updated = updateProgress(existing, existing.progress + progress);
+    const updated = updateProgress(existing, existing.progress + progressIncrement);
 
     const index = studentAchievements.findIndex((sa) => sa.achievementId === achievementId);
     studentAchievements[index] = updated;
@@ -141,14 +141,7 @@ export class ProgressService {
   }
 
   calculateGradePoints(grade: Grade): number {
-    const gradeValues: Record<Grade, number> = {
-      A: 4.0,
-      B: 3.0,
-      C: 2.0,
-      D: 1.0,
-      F: 0.0,
-    };
-    return gradeValues[grade];
+    return GRADE_VALUES[grade];
   }
 
   getStudentAchievements(studentId: string): StudentAchievement[] {

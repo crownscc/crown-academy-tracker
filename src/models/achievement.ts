@@ -12,7 +12,7 @@ export interface Achievement {
 export interface StudentAchievement {
   studentId: string;
   achievementId: string;
-  earnedAt: Date;
+  earnedAt?: Date;
   progress: number; // 0-100
 }
 
@@ -43,8 +43,6 @@ export function getTierMultiplier(tier: AchievementTier): number {
       return 3;
     case 'platinum':
       return 5;
-    default:
-      return 1;
   }
 }
 

@@ -1,4 +1,4 @@
-import { createStudent, isValidEmail, deactivateStudent } from './student';
+import { createStudent, isValidEmail, deactivateStudent, updateStudentName, updateStudentEmail } from './student';
 
 describe('Student Model', () => {
   describe('createStudent', () => {
@@ -55,5 +55,46 @@ describe('Student Model', () => {
     });
   });
 
-  // NOTE: updateStudentName and updateStudentEmail are NOT tested
+  describe('updateStudentName', () => {
+    it('should update the student name', () => {
+      const student = createStudent('s1', 'Alice', 'alice@example.com');
+      const updated = updateStudentName(student, 'Bob');
+      expect(updated.name).toBe('Bob');
+    });
+
+    it('should trim the new name', () => {
+      const student = createStudent('s1', 'Alice', 'alice@example.com');
+      const updated = updateStudentName(student, '  Bob  ');
+      expect(updated.name).toBe('Bob');
+    });
+
+    it('should throw for empty name', () => {
+      const student = createStudent('s1', 'Alice', 'alice@example.com');
+      expect(() => updateStudentName(student, '')).toThrow('Name cannot be empty');
+    });
+
+    it('should throw for whitespace-only name', () => {
+      const student = createStudent('s1', 'Alice', 'alice@example.com');
+      expect(() => updateStudentName(student, '   ')).toThrow('Name cannot be empty');
+    });
+  });
+
+  describe('updateStudentEmail', () => {
+    it('should update the student email', () => {
+      const student = createStudent('s1', 'Alice', 'alice@example.com');
+      const updated = updateStudentEmail(student, 'newalice@example.com');
+      expect(updated.email).toBe('newalice@example.com');
+    });
+
+    it('should lowercase the new email', () => {
+      const student = createStudent('s1', 'Alice', 'alice@example.com');
+      const updated = updateStudentEmail(student, 'BOB@Example.COM');
+      expect(updated.email).toBe('bob@example.com');
+    });
+
+    it('should throw for invalid email', () => {
+      const student = createStudent('s1', 'Alice', 'alice@example.com');
+      expect(() => updateStudentEmail(student, 'not-an-email')).toThrow('Invalid email format');
+    });
+  });
 });

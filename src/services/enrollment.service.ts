@@ -1,8 +1,10 @@
 import { Student, Enrollment, Grade } from '../models/student';
 import { Course, addStudentToCourse, removeStudentFromCourse, isCourseFull } from '../models/course';
+import { GRADE_VALUES } from '../constants';
 
 export class EnrollmentService {
   private enrollments: Map<string, Enrollment> = new Map();
+  private enrollmentCounter = 0;
 
   enroll(student: Student, course: Course): { enrollment: Enrollment; updatedCourse: Course } {
     if (!student.isActive) {
@@ -15,9 +17,8 @@ export class EnrollmentService {
       throw new Error('Course is full');
     }
 
-    const existingKey = this.getEnrollmentKey(student.id, course.id);
-    const existing = this.enrollments.get(existingKey);
-    if (existing && !existing.completedAt) {
+    const activeEnrollment = this.findActiveEnrollment(student.id, course.id);
+    if (activeEnrollment) {
       throw new Error('Student is already enrolled in this course');
     }
 
@@ -27,45 +28,44 @@ export class EnrollmentService {
       enrolledAt: new Date(),
     };
 
-    this.enrollments.set(existingKey, enrollment);
+    const key = `${student.id}:${course.id}:${++this.enrollmentCounter}`;
+    this.enrollments.set(key, enrollment);
     const updatedCourse = addStudentToCourse(course);
 
     return { enrollment, updatedCourse };
   }
 
   unenroll(studentId: string, courseId: string, course: Course): Course {
-    const key = this.getEnrollmentKey(studentId, courseId);
-    const enrollment = this.enrollments.get(key);
+    const entry = this.findActiveEnrollmentEntry(studentId, courseId);
 
-    if (!enrollment) {
+    if (!entry) {
       throw new Error('Enrollment not found');
     }
-    if (enrollment.completedAt) {
+    if (entry.enrollment.completedAt) {
       throw new Error('Cannot unenroll from a completed course');
     }
 
-    this.enrollments.delete(key);
+    this.enrollments.delete(entry.key);
     return removeStudentFromCourse(course);
   }
 
   completeEnrollment(studentId: string, courseId: string, grade: Grade): Enrollment {
-    const key = this.getEnrollmentKey(studentId, courseId);
-    const enrollment = this.enrollments.get(key);
+    const entry = this.findActiveEnrollmentEntry(studentId, courseId);
 
-    if (!enrollment) {
+    if (!entry) {
       throw new Error('Enrollment not found');
     }
-    if (enrollment.completedAt) {
+    if (entry.enrollment.completedAt) {
       throw new Error('Enrollment is already completed');
     }
 
     const completed: Enrollment = {
-      ...enrollment,
+      ...entry.enrollment,
       completedAt: new Date(),
       grade,
     };
 
-    this.enrollments.set(key, completed);
+    this.enrollments.set(entry.key, completed);
     return completed;
   }
 
@@ -101,28 +101,32 @@ export class EnrollmentService {
     const completed = this.getCompletedEnrollments(studentId);
     if (completed.length === 0) return null;
 
-    const gradeValues: Record<Grade, number> = {
-      A: 4.0,
-      B: 3.0,
-      C: 2.0,
-      D: 1.0,
-      F: 0.0,
-    };
-
     const total = completed.reduce((sum, e) => {
-      return sum + (e.grade ? gradeValues[e.grade] : 0);
+      return sum + (e.grade ? GRADE_VALUES[e.grade] : 0);
     }, 0);
 
     return total / completed.length;
   }
 
   isStudentEnrolled(studentId: string, courseId: string): boolean {
-    const key = this.getEnrollmentKey(studentId, courseId);
-    const enrollment = this.enrollments.get(key);
-    return !!enrollment && !enrollment.completedAt;
+    return !!this.findActiveEnrollment(studentId, courseId);
   }
 
-  private getEnrollmentKey(studentId: string, courseId: string): string {
-    return `${studentId}:${courseId}`;
+  private findActiveEnrollment(studentId: string, courseId: string): Enrollment | undefined {
+    for (const enrollment of this.enrollments.values()) {
+      if (enrollment.studentId === studentId && enrollment.courseId === courseId && !enrollment.completedAt) {
+        return enrollment;
+      }
+    }
+    return undefined;
+  }
+
+  private findActiveEnrollmentEntry(studentId: string, courseId: string): { key: string; enrollment: Enrollment } | undefined {
+    for (const [key, enrollment] of this.enrollments.entries()) {
+      if (enrollment.studentId === studentId && enrollment.courseId === courseId && !enrollment.completedAt) {
+        return { key, enrollment };
+      }
+    }
+    return undefined;
   }
 }

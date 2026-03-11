@@ -1,8 +1,11 @@
 import {
   createCourse,
   closeCourse,
+  openCourse,
   isCourseFull,
   addStudentToCourse,
+  removeStudentFromCourse,
+  createLesson,
   Course,
 } from './course';
 
@@ -41,7 +44,11 @@ describe('Course Model', () => {
       ).toThrow('Max students must be at least 1');
     });
 
-    // NOTE: maxStudents > 500 case is NOT tested
+    it('should throw if maxStudents exceeds 500', () => {
+      expect(() =>
+        createCourse('c1', 'Title', 'Desc', 'beginner', 'science', 501),
+      ).toThrow('Max students cannot exceed 500');
+    });
   });
 
   describe('closeCourse', () => {
@@ -81,8 +88,67 @@ describe('Course Model', () => {
       expect(() => addStudentToCourse(course)).toThrow('Course is full');
     });
 
-    // NOTE: addStudentToCourse when course is closed is NOT tested
+    it('should throw if course is closed', () => {
+      const course = makeCourse({ isOpen: false });
+      expect(() => addStudentToCourse(course)).toThrow('Cannot add student to a closed course');
+    });
   });
 
-  // NOTE: openCourse, removeStudentFromCourse, createLesson are NOT tested
+  describe('openCourse', () => {
+    it('should open a closed course', () => {
+      const course = makeCourse({ isOpen: false });
+      const opened = openCourse(course);
+      expect(opened.isOpen).toBe(true);
+    });
+
+    it('should throw if course is already open', () => {
+      const course = makeCourse();
+      expect(() => openCourse(course)).toThrow('Course is already open');
+    });
+  });
+
+  describe('removeStudentFromCourse', () => {
+    it('should decrement student count', () => {
+      const course = makeCourse({ currentStudents: 5 });
+      const updated = removeStudentFromCourse(course);
+      expect(updated.currentStudents).toBe(4);
+    });
+
+    it('should throw if no students to remove', () => {
+      const course = makeCourse({ currentStudents: 0 });
+      expect(() => removeStudentFromCourse(course)).toThrow('No students to remove');
+    });
+  });
+
+  describe('createLesson', () => {
+    it('should create a lesson with valid inputs', () => {
+      const lesson = createLesson('l1', 'c1', 'Intro', 'Content here', 1, 30);
+      expect(lesson.id).toBe('l1');
+      expect(lesson.courseId).toBe('c1');
+      expect(lesson.title).toBe('Intro');
+      expect(lesson.content).toBe('Content here');
+      expect(lesson.order).toBe(1);
+      expect(lesson.durationMinutes).toBe(30);
+    });
+
+    it('should throw if id, courseId, or title is missing', () => {
+      expect(() => createLesson('', 'c1', 'T', 'C', 1, 30)).toThrow('Lesson id, courseId, and title are required');
+      expect(() => createLesson('l1', '', 'T', 'C', 1, 30)).toThrow('Lesson id, courseId, and title are required');
+      expect(() => createLesson('l1', 'c1', '', 'C', 1, 30)).toThrow('Lesson id, courseId, and title are required');
+    });
+
+    it('should throw if order is less than 1', () => {
+      expect(() => createLesson('l1', 'c1', 'T', 'C', 0, 30)).toThrow('Lesson order must be at least 1');
+    });
+
+    it('should throw if duration is less than 1', () => {
+      expect(() => createLesson('l1', 'c1', 'T', 'C', 1, 0)).toThrow('Lesson duration must be at least 1 minute');
+    });
+
+    it('should trim title and content', () => {
+      const lesson = createLesson('l1', 'c1', '  Intro  ', '  Content  ', 1, 30);
+      expect(lesson.title).toBe('Intro');
+      expect(lesson.content).toBe('Content');
+    });
+  });
 });

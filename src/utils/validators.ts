@@ -17,8 +17,11 @@ export function isInRange(value: number, min: number, max: number): boolean {
 
 export function sanitizeString(input: string): string {
   return input
-    .replace(/[<>]/g, '')
     .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
     .trim();
 }
 
