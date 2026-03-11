@@ -259,8 +259,12 @@ app.get('/{*splat}', (_req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Crown Academy Tracker running at http://localhost:${PORT}`);
-});
+
+// Only start listening when run directly (not when imported by Vercel)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Crown Academy Tracker running at http://localhost:${PORT}`);
+  });
+}
 
 export default app;
