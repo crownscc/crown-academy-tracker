@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crown Academy</title>
+  <style>
+    :root {
+      --gold: #d4a017;
+      --gold-light: #f0d060;
+      --dark: #1a1a2e;
+      --darker: #16162a;
+      --card: #1e1e3a;
+      --card-hover: #252550;
+      --text: #e8e8f0;
+      --text-muted: #8888aa;
+      --accent: #6c63ff;
+      --accent-light: #8b83ff;
+      --success: #4caf50;
+      --bronze: #cd7f32;
+      --silver: #c0c0c0;
+      --tier-gold: #ffd700;
+      --platinum: #e5e4e2;
+      --danger: #ff5252;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, var(--darker) 0%, #1a1a40 100%);
+      border-bottom: 2px solid var(--gold);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .crown-icon {
+      font-size: 2rem;
+      filter: drop-shadow(0 0 8px rgba(212, 160, 23, 0.5));
+    }
+    .logo h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo span {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: block;
+    }
+    nav {
+      display: flex;
+      gap: 0.25rem;
+    }
+    nav button {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    nav button:hover, nav button.active {
+      background: var(--card);
+      color: var(--gold);
+    }
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+    }
+    .stat-card .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin: 0.25rem 0;
+    }
+    .stat-card .sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Section headers */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .section-header h2 {
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+
+    /* Tables */
+    .table-container {
+      background: var(--card);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 0.9rem;
+    }
+    tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+    tr:last-child td { border-bottom: none; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-bronze { background: rgba(205,127,50,0.2); color: var(--bronze); }
+    .badge-silver { background: rgba(192,192,192,0.2); color: var(--silver); }
+    .badge-gold { background: rgba(255,215,0,0.2); color: var(--tier-gold); }
+    .badge-platinum { background: rgba(229,228,226,0.2); color: var(--platinum); }
+    .badge-open { background: rgba(76,175,80,0.2); color: var(--success); }
+    .badge-closed { background: rgba(255,82,82,0.2); color: var(--danger); }
+    .badge-active { background: rgba(108,99,255,0.2); color: var(--accent-light); }
+    .badge-beginner { background: rgba(76,175,80,0.15); color: #81c784; }
+    .badge-intermediate { background: rgba(255,183,77,0.15); color: #ffb74d; }
+    .badge-advanced { background: rgba(255,82,82,0.15); color: #ff8a80; }
+    .badge-category {
+      background: rgba(108,99,255,0.15);
+      color: var(--accent-light);
+    }
+
+    /* Leaderboard */
+    .leaderboard-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .leaderboard-row:last-child { border-bottom: none; }
+    .rank {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .rank-1 { background: rgba(255,215,0,0.25); color: var(--tier-gold); }
+    .rank-2 { background: rgba(192,192,192,0.2); color: var(--silver); }
+    .rank-3 { background: rgba(205,127,50,0.2); color: var(--bronze); }
+    .rank-other { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+    .leaderboard-name { flex: 1; font-weight: 500; }
+    .leaderboard-points { font-weight: 600; color: var(--gold); }
+
+    /* Progress bar */
+    .progress-bar {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      height: 8px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 120px;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      transition: width 0.5s ease;
+    }
+
+    /* Activity feed */
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .activity-icon.completion { background: rgba(76,175,80,0.2); }
+    .activity-icon.achievement { background: rgba(212,160,23,0.2); }
+    .activity-icon.enrollment { background: rgba(108,99,255,0.2); }
+    .activity-desc { font-size: 0.9rem; }
+    .activity-time { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+    /* Grid layouts */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .two-col { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      header { flex-direction: column; gap: 1rem; }
+      nav { flex-wrap: wrap; justify-content: center; }
+      main { padding: 1rem; }
+    }
+
+    /* Cards */
+    .course-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: border-color 0.2s;
+      margin-bottom: 1rem;
+    }
+    .course-card:hover { border-color: var(--gold); }
+    .course-card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .course-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .course-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .course-enrollment {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    /* Achievement cards */
+    .achievement-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.2s;
+    }
+    .achievement-card:hover { border-color: var(--gold); }
+    .achievement-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .achievement-icon.bronze { background: rgba(205,127,50,0.15); }
+    .achievement-icon.silver { background: rgba(192,192,192,0.15); }
+    .achievement-icon.gold { background: rgba(255,215,0,0.15); }
+    .achievement-icon.platinum { background: rgba(229,228,226,0.15); }
+    .achievement-info h3 { font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .achievement-info p { font-size: 0.8rem; color: var(--text-muted); }
+    .achievement-points {
+      margin-left: auto;
+      text-align: right;
+    }
+    .achievement-points .pts {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .achievement-points .tier {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+    .spinner {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Student detail panel */
+    .student-row { cursor: pointer; }
+    .student-detail {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--gold);
+      margin-bottom: 2rem;
+    }
+    .student-detail h2 {
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .detail-stat .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .detail-stat .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+    .empty-state p { margin-top: 0.5rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="crown-icon">&#x1F451;</span>
+      <div>
+        <h1>Crown Academy</h1>
+        <span>Student Progress Tracker</span>
+      </div>
+    </div>
+    <nav>
+      <button class="active" onclick="showView('dashboard')">Dashboard</button>
+      <button onclick="showView('students')">Students</button>
+      <button onclick="showView('courses')">Courses</button>
+      <button onclick="showView('achievements')">Achievements</button>
+      <button onclick="showView('leaderboard')">Leaderboard</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Dashboard -->
+    <div id="dashboard" class="view active">
+      <div class="stats-grid" id="stats-cards">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+      <div class="two-col">
+        <div>
+          <div class="section-header"><h2>Top Performers</h2></div>
+          <div class="table-container" id="top-performers">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="section-header"><h2>Recent Activity</h2></div>
+          <div class="table-container" id="recent-activity">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Students -->
+    <div id="students" class="view">
+      <div class="section-header">
+        <h2>Students</h2>
+      </div>
+      <div id="student-detail-panel"></div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Enrolled</th>
+            </tr>
+          </thead>
+          <tbody id="students-table">
+            <tr><td colspan="4" class="loading"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Courses -->
+    <div id="courses" class="view">
+      <div class="section-header"><h2>Course Catalog</h2></div>
+      <div id="courses-list">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <div id="achievements" class="view">
+      <div class="section-header"><h2>Achievements</h2></div>
+      <div id="achievements-list">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard" class="view">
+      <div class="section-header"><h2>Leaderboard</h2></div>
+      <div class="table-container" id="leaderboard-list">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API = '';
+
+    async function api(path) {
+      const res = await fetch(API + path);
+      return res.json();
+    }
+
+    function showView(name) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(name).classList.add('active');
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      loadView(name);
+    }
+
+    function tierBadge(tier) {
+      return `<span class="badge badge-${tier}">${tierIcon(tier)} ${tier.charAt(0).toUpperCase() + tier.slice(1)}</span>`;
+    }
+    function tierIcon(tier) {
+      return { bronze: '\u{1F949}', silver: '\u{1F948}', gold: '\u{1F947}', platinum: '\u{1F48E}' }[tier] || '';
+    }
+    function levelBadge(level) {
+      return `<span class="badge badge-${level}">${level.charAt(0).toUpperCase() + level.slice(1)}</span>`;
+    }
+    function categoryBadge(cat) {
+      return `<span class="badge badge-category">${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>`;
+    }
+    function formatDate(d) {
+      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    async function loadDashboard() {
+      const stats = await api('/api/stats');
+      document.getElementById('stats-cards').innerHTML = `
+        <div class="stat-card">
+          <div class="label">Students</div>
+          <div class="value">${stats.totalStudents}</div>
+          <div class="sub">Active learners</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Courses</div>
+          <div class="value">${stats.totalCourses}</div>
+          <div class="sub">Available courses</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Achievements</div>
+          <div class="value">${stats.totalAchievements}</div>
+          <div class="sub">Unlockable badges</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Categories</div>
+          <div class="value">${Object.keys(stats.coursesByCategory).length}</div>
+          <div class="sub">Course categories</div>
+        </div>
+      `;
+
+      if (stats.topPerformers.length) {
+        document.getElementById('top-performers').innerHTML = stats.topPerformers.map(p => `
+          <div class="leaderboard-row">
+            <div class="rank rank-${p.rank <= 3 ? p.rank : 'other'}">${p.rank}</div>
+            <div class="leaderboard-name">${p.studentName}</div>
+            ${tierBadge(p.tier)}
+            <div class="leaderboard-points">${p.totalPoints} pts</div>
+          </div>
+        `).join('');
+      } else {
+        document.getElementById('top-performers').innerHTML = '<div class="empty-state"><p>No data yet</p></div>';
+      }
+
+      if (stats.recentActivity.length) {
+        document.getElementById('recent-activity').innerHTML = stats.recentActivity.map(a => `
+          <div class="activity-item">
+            <div class="activity-icon ${a.type}">${a.type === 'completion' ? '\u2705' : a.type === 'achievement' ? '\u{1F3C6}' : '\u{1F4DA}'}</div>
+            <div>
+              <div class="activity-desc">${a.description}</div>
+              <div class="activity-time">${formatDate(a.time)}</div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        document.getElementById('recent-activity').innerHTML = '<div class="empty-state"><p>No recent activity</p></div>';
+      }
+    }
+
+    async function loadStudents() {
+      const students = await api('/api/students');
+      document.getElementById('students-table').innerHTML = students.map(s => `
+        <tr class="student-row" onclick="showStudentDetail('${s.id}', '${s.name}')">
+          <td><strong>${s.name}</strong></td>
+          <td>${s.email}</td>
+          <td><span class="badge ${s.isActive ? 'badge-open' : 'badge-closed'}">${s.isActive ? 'Active' : 'Inactive'}</span></td>
+          <td>${formatDate(s.enrolledAt)}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function showStudentDetail(id, name) {
+      const [progress, enrollments, achievements] = await Promise.all([
+        api(`/api/progress/${id}`),
+        api(`/api/enrollments/student/${id}`),
+        api(`/api/achievements/student/${id}`),
+      ]);
+
+      document.getElementById('student-detail-panel').innerHTML = `
+        <div class="student-detail">
+          <h2>${name}</h2>
+          <div class="detail-grid">
+            <div class="detail-stat">
+              <div class="label">Tier</div>
+              <div class="value">${tierIcon(progress.tier)}</div>
+            </div>
+            <div class="detail-stat">
+              <div class="label">Total Points</div>
+              <div class="value">${progress.totalPoints}</div>
+            </div>
+            <div class="detail-stat">
+              <div class="label">GPA</div>
+              <div class="value">${progress.gpa !== null ? progress.gpa.toFixed(2) : 'N/A'}</div>
+            </div>
+            <div class="detail-stat">
+              <div class="label">Completed</div>
+              <div class="value">${progress.completedCourses}</div>
+            </div>
+            <div class="detail-stat">
+              <div class="label">Active</div>
+              <div class="value">${progress.activeCourses}</div>
+            </div>
+            <div class="detail-stat">
+              <div class="label">Achievements</div>
+              <div class="value">${progress.achievementsEarned}</div>
+            </div>
+          </div>
+          ${achievements.length ? `
+          <h3 style="margin-bottom:0.5rem;font-size:0.9rem;color:var(--text-muted)">ACHIEVEMENT PROGRESS</h3>
+          ${achievements.map(a => `
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+              <span style="font-size:0.85rem;width:100px">${a.progress >= 100 ? '\u2705' : '\u{1F3AF}'} ${a.progress}%</span>
+              <div class="progress-bar" style="flex:1;max-width:200px">
+                <div class="progress-fill" style="width:${a.progress}%"></div>
+              </div>
+            </div>
+          `).join('')}` : ''}
+          <button onclick="document.getElementById('student-detail-panel').innerHTML=''" style="margin-top:1rem;background:transparent;border:1px solid var(--text-muted);color:var(--text-muted);padding:0.4rem 1rem;border-radius:6px;cursor:pointer">Close</button>
+        </div>
+      `;
+    }
+
+    async function loadCourses() {
+      const courses = await api('/api/courses');
+      document.getElementById('courses-list').innerHTML = courses.map(c => `
+        <div class="course-card">
+          <h3>${c.title}</h3>
+          <p>${c.description}</p>
+          <div class="course-meta">
+            ${levelBadge(c.level)}
+            ${categoryBadge(c.category)}
+            <span class="badge ${c.isOpen ? 'badge-open' : 'badge-closed'}">${c.isOpen ? 'Open' : 'Closed'}</span>
+            <span class="course-enrollment">${c.currentStudents}/${c.maxStudents} enrolled</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadAchievements() {
+      const achievements = await api('/api/achievements');
+      const tierMultiplier = { bronze: 1, silver: 2, gold: 3, platinum: 5 };
+      document.getElementById('achievements-list').innerHTML = achievements.map(a => `
+        <div class="achievement-card">
+          <div class="achievement-icon ${a.tier}">${tierIcon(a.tier)}</div>
+          <div class="achievement-info">
+            <h3>${a.title}</h3>
+            <p>${a.description}</p>
+          </div>
+          <div class="achievement-points">
+            <div class="pts">${a.pointsRequired * (tierMultiplier[a.tier] || 1)} pts</div>
+            <div class="tier">${tierBadge(a.tier)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadLeaderboard() {
+      const entries = await api('/api/leaderboard');
+      if (entries.length === 0) {
+        document.getElementById('leaderboard-list').innerHTML = '<div class="empty-state"><p>No leaderboard data yet</p></div>';
+        return;
+      }
+      document.getElementById('leaderboard-list').innerHTML = entries.map(e => `
+        <div class="leaderboard-row">
+          <div class="rank rank-${e.rank <= 3 ? e.rank : 'other'}">${e.rank}</div>
+          <div class="leaderboard-name">${e.studentName}</div>
+          ${tierBadge(e.tier)}
+          <div class="leaderboard-points">${e.totalPoints} pts</div>
+        </div>
+      `).join('');
+    }
+
+    function loadView(name) {
+      switch (name) {
+        case 'dashboard': loadDashboard(); break;
+        case 'students': loadStudents(); break;
+        case 'courses': loadCourses(); break;
+        case 'achievements': loadAchievements(); break;
+        case 'leaderboard': loadLeaderboard(); break;
+      }
+    }
+
+    // Initial load
+    loadDashboard();
+  </script>
+</body>
+</html>
